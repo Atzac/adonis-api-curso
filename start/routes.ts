@@ -27,3 +27,7 @@ Route.get('/', async () => {
 Route.group(() => {
   Route.resource('/courses', 'CoursesController')
 })
+
+Route.group(() => {
+  Route.resource('/students', 'CoursesController')
+})
