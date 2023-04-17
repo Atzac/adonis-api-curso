@@ -5,6 +5,7 @@ import { validator } from '@ioc:Adonis/Core/Validator'
 import { CustomMessages } from 'App/Validators/CustomMessages'
 import UpdateStudentValidator from 'App/Validators/UpdateStudentValidator'
 import moment from 'moment'
+import Database from '@ioc:Adonis/Lucid/Database'
 
 export default class StudentsController {
   public async index(ctx: HttpContextContract) {
@@ -12,7 +13,7 @@ export default class StudentsController {
     if (noPaginate) {
       return Student.query()
     }
-    return Student.query().paginate(page, perPage)
+    return Student.query().preload('course').paginate(page, perPage)
   }
 
   public async show(ctx: HttpContextContract) {
@@ -31,7 +32,20 @@ export default class StudentsController {
       messages: new CustomMessages().messages,
     })
 
-    return Student.create({ ...body, birth_date: moment(body.birth_date, 'DD/MM/YYYY').toDate() })
+    const trx = await Database.transaction()
+    try {
+      const student = await Student.create(
+        { ...body, birth_date: moment(body.birth_date, 'DD/MM/YYYY').toDate() },
+        { client: trx }
+      )
+      await student.useTransaction(trx).related('address').create(body.address)
+
+      await trx.commit()
+      return ctx.response.created({ message: 'Student created successfully' })
+    } catch (error) {
+      trx.rollback()
+      return error
+    }
   }
 
   public async update(ctx: HttpContextContract) {
@@ -46,11 +60,30 @@ export default class StudentsController {
       messages: new CustomMessages().messages,
     })
 
-    const students = await Student.findByOrFail('id', id)
+    const trx = await Database.transaction()
+    try {
+      const students = await Student.findByOrFail('id', id)
+      await students
+        .merge({ ...body, birth_date: moment(body.birth_date, 'DD/MM/YYYY').toDate() })
+        .useTransaction(trx)
+        .save()
 
-    return students
-      .merge({ ...body, birth_date: moment(body.birth_date, 'DD/MM/YYYY').toDate() })
-      .save()
+      await students.useTransaction(trx).related('address').updateOrCreate(
+        {},
+        {
+          street: body.address.street,
+          number: body.address.number,
+          neighborhood: body.address.neighborhood,
+          city: body.address.city,
+          country: body.address.country,
+        }
+      )
+      await trx.commit()
+      return ctx.response.created({ message: 'Student update successfully' })
+    } catch (error) {
+      trx.rollback()
+      return error
+    }
   }
 
   public async destroy(ctx: HttpContextContract) {

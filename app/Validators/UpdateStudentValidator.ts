@@ -14,6 +14,13 @@ export default class UpdateStudentValidator {
         whereNot: { id: this.ctx.params.id },
       }),
     ]),
+    address: schema.object().members({
+      street: schema.string(),
+      number: schema.number(),
+      neighborhood: schema.string(),
+      city: schema.string(),
+      country: schema.string(),
+    }),
     course_id: schema.number([rules.exists({ table: 'courses', column: 'id' })]),
   })
 
