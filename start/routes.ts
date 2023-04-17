@@ -29,5 +29,5 @@ Route.group(() => {
 })
 
 Route.group(() => {
-  Route.resource('/students', 'CoursesController')
+  Route.resource('/students', 'StudentsController')
 })

@@ -4,6 +4,7 @@ import CreadStudentValidator from 'App/Validators/CreateStudentValidator'
 import { validator } from '@ioc:Adonis/Core/Validator'
 import { CustomMessages } from 'App/Validators/CustomMessages'
 import UpdateStudentValidator from 'App/Validators/UpdateStudentValidator'
+import moment from 'moment'
 
 export default class StudentsController {
   public async index(ctx: HttpContextContract) {
@@ -30,7 +31,7 @@ export default class StudentsController {
       messages: new CustomMessages().messages,
     })
 
-    return Student.create(body)
+    return Student.create({ ...body, birth_date: moment(body.birth_date, 'DD/MM/YYYY').toDate() })
   }
 
   public async update(ctx: HttpContextContract) {
@@ -47,7 +48,9 @@ export default class StudentsController {
 
     const students = await Student.findByOrFail('id', id)
 
-    return students.merge({ ...body }).save()
+    return students
+      .merge({ ...body, birth_date: moment(body.birth_date, 'DD/MM/YYYY').toDate() })
+      .save()
   }
 
   public async destroy(ctx: HttpContextContract) {
