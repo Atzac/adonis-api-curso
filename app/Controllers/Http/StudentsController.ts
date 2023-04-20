@@ -6,6 +6,8 @@ import { CustomMessages } from 'App/Validators/CustomMessages'
 import UpdateStudentValidator from 'App/Validators/UpdateStudentValidator'
 import moment from 'moment'
 import Database from '@ioc:Adonis/Lucid/Database'
+import NotFoundException from 'App/Exceptions/NotFoundExeption'
+import { Exception } from '@adonisjs/core/build/standalone'
 
 export default class StudentsController {
   public async index(ctx: HttpContextContract) {
@@ -60,8 +62,14 @@ export default class StudentsController {
     })
 
     const trx = await Database.transaction()
+
     try {
-      const students = await Student.findByOrFail('id', id)
+      const students = await Student.findBy('id', id)
+
+      if (!students) {
+        throw new NotFoundException('Student not found', 404, 'E_NOT_FOUND')
+      }
+
       await students
         .merge({ ...body, birth_date: moment(body.birth_date, 'DD/MM/YYYY').toDate() })
         .useTransaction(trx)
@@ -77,11 +85,17 @@ export default class StudentsController {
           country: body.address.country,
         }
       )
+
       await trx.commit()
       return ctx.response.created({ message: 'Student update successfully' })
     } catch (error) {
       trx.rollback()
-      return error
+
+      throw new Exception(
+        error.message || 'Internal Server Error',
+        error.status || 500,
+        error.code || 'E_INTERNAL_SERVER_ERROR'
+      )
     }
   }
 
