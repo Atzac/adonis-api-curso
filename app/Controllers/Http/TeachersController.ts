@@ -6,6 +6,8 @@ import { CustomMessages } from 'App/Validators/CustomMessages'
 import Database from '@ioc:Adonis/Lucid/Database'
 import moment from 'moment'
 import UpdateTeacherValidator from 'App/Validators/UpdateTeacherValidator'
+import NotFoundException from 'App/Exceptions/NotFoundExeption'
+import { Exception } from '@adonisjs/core/build/standalone'
 
 export default class TeachersController {
   public async index(ctx: HttpContextContract) {
@@ -65,6 +67,11 @@ export default class TeachersController {
     const trx = await Database.transaction()
     try {
       const teacher = await Teacher.findByOrFail('id', id)
+
+      if (!teacher) {
+        throw new NotFoundException('Student not found', 404, 'E_NOT_FOUND')
+      }
+
       await teacher
         .merge({ ...body, birth_date: moment(body.birth_date, 'DD/MM/YYYY').toDate() })
         .useTransaction(trx)
@@ -84,7 +91,11 @@ export default class TeachersController {
       return ctx.response.created({ message: 'Teacher update successfully' })
     } catch (error) {
       trx.rollback()
-      return error
+      throw new Exception(
+        error.message || 'Internal Server Error',
+        error.status || 500,
+        error.code || 'E_INTERNAL_SERVER_ERROR'
+      )
     }
   }
 
