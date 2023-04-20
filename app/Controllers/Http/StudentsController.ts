@@ -1,6 +1,6 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Student from 'App/Models/Student'
-import CreadStudentValidator from 'App/Validators/CreateStudentValidator'
+import CreateStudentValidator from 'App/Validators/CreateStudentValidator'
 import { validator } from '@ioc:Adonis/Core/Validator'
 import { CustomMessages } from 'App/Validators/CustomMessages'
 import UpdateStudentValidator from 'App/Validators/UpdateStudentValidator'
@@ -23,8 +23,7 @@ export default class StudentsController {
 
   public async store(ctx: HttpContextContract) {
     const body = ctx.request.body()
-
-    const studentValidator = new CreadStudentValidator(ctx)
+    const studentValidator = new CreateStudentValidator(ctx)
 
     await validator.validate({
       schema: studentValidator.schema,

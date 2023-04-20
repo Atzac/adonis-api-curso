@@ -1,7 +1,7 @@
 import { schema, CustomMessages, rules } from '@ioc:Adonis/Core/Validator'
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
-export default class CreateStudentValidator {
+export default class CreateTeacherValidator {
   constructor(protected ctx: HttpContextContract) {}
 
   public schema = schema.create({
@@ -9,7 +9,7 @@ export default class CreateStudentValidator {
     birth_date: schema.date({ format: 'dd/mm/yyyy' }),
     cpf: schema.string({}, [
       rules.unique({
-        table: 'students',
+        table: 'teachers',
         column: 'cpf',
       }),
     ]),

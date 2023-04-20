@@ -22,7 +22,7 @@ export default class Teacher extends BaseModel {
   @belongsTo(() => Course, { foreignKey: 'course_id' })
   public 'course': BelongsTo<typeof Course>
 
-  @hasOne(() => Address, { foreignKey: 'student_id' })
+  @hasOne(() => Address, { foreignKey: 'teacher_id' })
   public 'address': HasOne<typeof Address>
 
   @column.dateTime({ autoCreate: true })
